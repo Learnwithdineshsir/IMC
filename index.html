@@ -1,0 +1,1507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IMC 2026 Unit 1: The Omnichannel Ecosystem</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            maroon: '#6A1B1A',
+                            mustard: '#E8B53D',
+                            cream: '#FFFBF0',
+                            dark: '#2D0A0A',
+                            card: '#FFFFFF',
+                            textDark: '#1F2937',
+                            cyan: '#E8B53D', // Unified styling anchors
+                            violet: '#6A1B1A',
+                            rose: '#f43f5e'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts & Lucide Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- React & Babel CDNs -->
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            background-color: #FFFBF0;
+        }
+        /* Custom scrollbar optimized for cream theme */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #FFFBF0;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #E8B53D;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6A1B1A;
+        }
+    </style>
+</head>
+<body class="bg-[#FFFBF0] text-slate-800 min-h-screen">
+
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+
+        // Custom Hook for Touch Swipes
+        function useSwipe(onSwipeLeft, onSwipeRight) {
+            const [touchStart, setTouchStart] = useState(null);
+            const [touchEnd, setTouchEnd] = useState(null);
+
+            const minSwipeDistance = 50;
+
+            const onTouchStart = (e) => {
+                setTouchEnd(null);
+                setTouchStart(e.targetTouches[0].clientX);
+            };
+
+            const onTouchMove = (e) => setTouchEnd(e.targetTouches[0].clientX);
+
+            const onTouchEnd = () => {
+                if (!touchStart || !touchEnd) return;
+                const distance = touchStart - touchEnd;
+                const isLeftSwipe = distance > minSwipeDistance;
+                const isRightSwipe = distance < -minSwipeDistance;
+                if (isLeftSwipe && onSwipeLeft) onSwipeLeft();
+                if (isRightSwipe && onSwipeRight) onSwipeRight();
+            };
+
+            return { onTouchStart, onTouchMove, onTouchEnd };
+        }
+
+        // --- MOCK DATA ---
+        const SLIDES = [
+            {
+                id: 1,
+                title: "The Death of the Monolith",
+                subtitle: "Welcome to the 2026 Consumer Landscape",
+                coreConcept: "The modern consumer does not live in a single channel. They inhabit a fragmented, fluid digital stream where attention is the ultimate premium.",
+                keyPoints: [
+                    "The 8-Second Filter: Consumers don't have short attention spans; they have highly sophisticated, instant-filtering mechanisms.",
+                    "The Multi-Screen Reality: 90% of consumers switch between devices sequentially, expecting context & cart data to follow.",
+                    "Context Over Content: Reaching a consumer while relaxing on TikTok is fundamentally different from reaching them via Email in their workspace."
+                ],
+                visualDirection: "Split Screen. Left: Chaotic visual flow of overlapping logos with an active 'Attention Deficit' meter. Right: Clean text highlighting: 'Attention isn't scarce; it's decentralized.'",
+                interactiveType: "attention-meter"
+            },
+            {
+                id: 2,
+                title: "Structural Confrontation",
+                subtitle: "Traditional Silos vs. 2026 Omnichannel",
+                coreConcept: "Multi-channel is NOT omnichannel. Brand presence in multiple channels means nothing if they are completely disconnected.",
+                keyPoints: [
+                    "The Traditional Silo (Multichannel): Disconnected execution across PR, Social, Email, and Retail. High waste, broken experience.",
+                    "The 2026 Ecosystem (Omnichannel): A single unified user-data profile updating real-time messages across touchpoints.",
+                    "The Transition Catalyst: Third-party cookie deprecation makes zero-party & first-party synchronized databases a survival mechanism."
+                ],
+                visualDirection: "Comparative high-contrast table switching between Multichannel and Omnichannel attributes.",
+                interactiveType: "comparison-table"
+            },
+            {
+                id: 3,
+                title: "The 4 C's of 2026 IMC",
+                subtitle: "The Strategic Guardrails for Multi-Platform Consistency",
+                coreConcept: "Maintaining a powerful, singular voice across vastly diverse platforms without becoming monotonous or platform-deaf.",
+                keyPoints: [
+                    "Consistency: Core values, tone, and brand promise remain uncompromised whether on a billboard or on TikTok.",
+                    "Clarity: One ultra-focused, instantly digestible value proposition cutting through competitive digital noise.",
+                    "Connection: Native formatting (e.g., vertical UGC video on TikTok, expert editorial layout in targeted newsletters) to evoke emotion.",
+                    "Continuity: Creating intentional customer handoffs so each successive touchpoint builds on the previous exposure."
+                ],
+                visualDirection: "Sleek quadrant display showcasing the 4 C's rotating around an interactive, glowing 'Unified Customer Profile' hub.",
+                interactiveType: "four-cs"
+            },
+            {
+                id: 4,
+                title: "The 2026 PESO Model",
+                subtitle: "Integrated Ecosystem Architecture",
+                coreConcept: "Media channels can no longer exist as independent silos. They are highly interactive cogs in a self-reinforcing flywheel.",
+                keyPoints: [
+                    "Paid (Amplification): Dynamic programmatic digital out-of-home (DOOH), native creator ads, and Retail Media Networks.",
+                    "Earned (Credibility): Algorithmic PR, community discovery, and micro-creator reviews.",
+                    "Shared (Engagement): Co-created narratives, community hubs (Discord, Reddit), and responsive short-form trends.",
+                    "Owned (Relationship): First-party storage, custom localized application features, and targeted SMS/Email triggers."
+                ],
+                visualDirection: "Dynamic overlapping Venn diagram. Selecting individual segments isolates detailed interaction points.",
+                interactiveType: "peso-model"
+            },
+            {
+                id: 5,
+                title: "The Synchronization Imperative",
+                subtitle: "Mapping Cross-Platform Journey Rhythms",
+                coreConcept: "Tracking and pacing a unified message journey from a fleeting micro-moment on mobile to a tangible physical location.",
+                keyPoints: [
+                    "The Native Hook: Fast-paced vertical media designed specifically to interrupt the scroll and spark curiosity.",
+                    "The Conversion Bridge: Interactive zero-party collection through immersive quizzes, configurators, or dynamic AI tools.",
+                    "The Relationship Nurture: High-utility, trigger-based updates reacting cleanly to customer interactions.",
+                    "The Physical Anchor: Transforming digital metrics into localized retail pop-ups and live community events."
+                ],
+                visualDirection: "An interactive stepper timeline highlighting a real-world multi-step integrated marketing loop.",
+                interactiveType: "sync-timeline"
+            },
+            {
+                id: 6,
+                title: "The AI & Privacy Paradox",
+                subtitle: "Consent-Driven Personalization at Scale",
+                coreConcept: "Navigating the tension between creating highly individualized messages and respecting strict global privacy expectations.",
+                keyPoints: [
+                    "The Cookie Apocalypse: Reliance on third-party behavioral tracking must be replaced with mutual value trades.",
+                    "AI Integration: Generative AI dynamically swapping copy, context, and creative models based on real-time referral channels.",
+                    "The Creepy vs. Cool Boundary: Delivering absolute context-utility (cool) without feeling like a surveillance tool (creepy)."
+                ],
+                visualDirection: "Interactive 'Creepy vs. Cool' dial showing how messaging triggers change consumer perception.",
+                interactiveType: "privacy-slider"
+            },
+            {
+                id: 7,
+                title: "Evaluating IMC Performance",
+                subtitle: "Moving Beyond Vanity Analytics to True Impact",
+                coreConcept: "Siloed metrics deceive. Modern marketing managers track unified cross-channel contribution and brand lift.",
+                keyPoints: [
+                    "The Silo Metric Trap: Tracking isolated views, clicks, or likes that fail to demonstrate direct incremental revenue.",
+                    "Unified Multi-Touch Attribution: Measuring combined platform contribution to identify true customer acquisition cost (CAC).",
+                    "Incrementality: The absolute test of whether changing creative on platform A increases sales performance on platform B."
+                ],
+                visualDirection: "Dashboard comparison layout highlighting dynamic high-impact metrics versus empty vanity metrics.",
+                interactiveType: "metric-dashboard"
+            }
+        ];
+
+        const BRAND_EXAMPLES = [
+            {
+                name: "CeraVe (Michael Cera)",
+                tagline: "The Ultimate Cross-Channel Orchestration",
+                summary: "Flawlessly merged viral creator culture, community rumors, and traditional broadcast to validate their dermatologist-first core positioning.",
+                details: [
+                    "Shared/Earned: Infiltrated gossip media and TikTok creators with 'leaked' paparazzi photos of Michael Cera writing on skin cream boxes in pharmacies.",
+                    "Paid: Standard Super Bowl LVIII broadcast ad showing a surreal commercial of Michael Cera 'claiming' to create the cream, immediately debunked by real dermatologists.",
+                    "Owned & Physical: Dedicated landing pages explaining the science, custom gift packages for creators, and point-of-sale shelf takeovers."
+                ]
+            },
+            {
+                name: "Liquid Death",
+                tagline: "Heavy Metal Water Branding",
+                summary: "Turned a completely commoditized product (bottled water) into a high-octane premium lifestyle brand with zero traditional television advertising.",
+                details: [
+                    "Packaging Innovation: Canned in 16.9oz aluminum tallboys, which looked exactly like craft beers. Instant visual talking point.",
+                    "Shared-First Creative: High-production-value comedic videos mock-killing standard wellness cliches, driving millions of organic views and merchandise signups.",
+                    "Owned/Loyalty: Built a 'Sell Your Soul' fan club database to acquire high-value zero-party data and offer limited physical product drops."
+                ]
+            }
+        ];
+
+        const TRADITIONAL_PRODUCTS = [
+            "A Classic Wooden Pencil",
+            "Unflavored Dental Floss",
+            "A Basic Grey Rain Umbrella",
+            "A Can of Organic Black Beans",
+            "Plain Metal Paperclips",
+            "A Standard Roll of Brown Packing Tape",
+            "A Classic Yellow Kitchen Sponge"
+        ];
+
+        // --- COMPONENTS ---
+
+        function App() {
+            const [currentSlide, setCurrentSlide] = useState(0);
+            const [showNotes, setShowNotes] = useState(true);
+            const [activeTab, setActiveTab] = useState('slides'); // slides, activities, brands, resources
+            const [isFullScreen, setIsFullScreen] = useState(false);
+            const slideContainerRef = useRef(null);
+
+            // Handle Slide Navigation
+            const nextSlide = () => {
+                if (currentSlide < SLIDES.length - 1) {
+                    setCurrentSlide(currentSlide + 1);
+                }
+            };
+
+            const prevSlide = () => {
+                if (currentSlide > 0) {
+                    setCurrentSlide(currentSlide - 1);
+                }
+            };
+
+            // Keyboard navigation
+            useEffect(() => {
+                const handleKeyDown = (e) => {
+                    if (activeTab !== 'slides') return;
+                    if (e.key === 'ArrowRight' || e.key === ' ') {
+                        e.preventDefault();
+                        nextSlide();
+                    } else if (e.key === 'ArrowLeft') {
+                        e.preventDefault();
+                        prevSlide();
+                    }
+                };
+                window.addEventListener('keydown', handleKeyDown);
+                return () => window.removeEventListener('keydown', handleKeyDown);
+            }, [currentSlide, activeTab]);
+
+            // Touch support
+            const swipeHandlers = useSwipe(nextSlide, prevSlide);
+
+            // Fullscreen toggle helper
+            const toggleFullScreen = () => {
+                if (!document.fullscreenElement) {
+                    slideContainerRef.current.requestFullscreen().then(() => {
+                        setIsFullScreen(true);
+                    }).catch(err => {
+                        console.error(`Error attempting to enable full-screen mode: ${err.message}`);
+                    });
+                } else {
+                    document.exitFullscreen();
+                    setIsFullScreen(false);
+                }
+            };
+
+            useEffect(() => {
+                const handleFsChange = () => {
+                    if (!document.fullscreenElement) setIsFullScreen(false);
+                };
+                document.addEventListener('fullscreenchange', handleFsChange);
+                return () => document.removeEventListener('fullscreenchange', handleFsChange);
+            }, []);
+
+            return (
+                <div className="flex flex-col min-h-screen bg-[#FFFBF0] text-slate-800">
+                    {/* TOP NAVIGATION HEADER (MAROON BRANDED BG) */}
+                    <header className="border-b border-[#E8B53D] bg-[#6A1B1A] sticky top-0 z-30 px-4 py-3 flex flex-wrap items-center justify-between gap-4 shadow-md">
+                        {/* BRAND LOGO & IDENTITY */}
+                        <div className="flex items-center gap-3">
+                            {/* Circular Mustard Background with Maroon "द" */}
+                            <div className="bg-[#E8B53D] w-10 h-10 rounded-full flex items-center justify-center shadow-md flex-shrink-0">
+                                <span className="text-[#6A1B1A] font-extrabold text-2xl font-serif leading-none select-none">द</span>
+                            </div>
+                            <div>
+                                <h1 className="text-base font-black tracking-tight text-white">Learn with Dinesh Sir</h1>
+                                <p className="text-[10px] sm:text-xs text-[#E8B53D] font-bold">Unit 1 Lecture Package: 2026 Omnichannel Ecosystem</p>
+                            </div>
+                        </div>
+
+                        {/* NAV TABS */}
+                        <div className="flex bg-[#2D0A0A] p-1 rounded-lg border border-[#E8B53D]/30 text-xs sm:text-sm">
+                            <button 
+                                onClick={() => setActiveTab('slides')}
+                                className={`px-3 py-1.5 rounded-md font-bold transition-all duration-200 flex items-center gap-2 ${activeTab === 'slides' ? 'bg-[#E8B53D] text-[#6A1B1A] shadow' : 'text-slate-300 hover:text-white'}`}
+                            >
+                                <i data-lucide="presentation" className="w-3.5 h-3.5"></i>
+                                <span className="hidden sm:inline">Slides</span>
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('activities')}
+                                className={`px-3 py-1.5 rounded-md font-bold transition-all duration-200 flex items-center gap-2 ${activeTab === 'activities' ? 'bg-[#E8B53D] text-[#6A1B1A] shadow' : 'text-slate-300 hover:text-white'}`}
+                            >
+                                <i data-lucide="gamepad-2" className="w-3.5 h-3.5"></i>
+                                <span className="hidden sm:inline">Class Activity</span>
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('brands')}
+                                className={`px-3 py-1.5 rounded-md font-bold transition-all duration-200 flex items-center gap-2 ${activeTab === 'brands' ? 'bg-[#E8B53D] text-[#6A1B1A] shadow' : 'text-slate-300 hover:text-white'}`}
+                            >
+                                <i data-lucide="rocket" className="w-3.5 h-3.5"></i>
+                                <span className="hidden sm:inline">Case Studies</span>
+                            </button>
+                            <button 
+                                onClick={() => setActiveTab('resources')}
+                                className={`px-3 py-1.5 rounded-md font-bold transition-all duration-200 flex items-center gap-2 ${activeTab === 'resources' ? 'bg-[#E8B53D] text-[#6A1B1A] shadow' : 'text-slate-300 hover:text-white'}`}
+                            >
+                                <i data-lucide="youtube" className="w-3.5 h-3.5"></i>
+                                <span className="hidden sm:inline">Video prompts</span>
+                            </button>
+                        </div>
+
+                        {/* UTILITY CONTROLS */}
+                        <div className="flex items-center gap-2 text-xs">
+                            <button 
+                                onClick={() => setShowNotes(!showNotes)}
+                                className={`p-2 rounded-lg border transition-all duration-150 flex items-center gap-1.5 font-semibold ${showNotes ? 'bg-[#E8B53D] border-[#E8B53D] text-[#6A1B1A]' : 'border-white/20 text-slate-300 hover:border-white/50 hover:text-white'}`}
+                                title="Toggle Presenter Notes"
+                            >
+                                <i data-lucide="message-square" className="w-4 h-4"></i>
+                                <span className="hidden md:inline">Presenter Notes</span>
+                            </button>
+                            <button 
+                                onClick={toggleFullScreen}
+                                className="p-2 rounded-lg border border-white/20 text-slate-300 hover:border-white/50 hover:text-white"
+                                title="Fullscreen Presentation Mode"
+                            >
+                                <i data-lucide={isFullScreen ? "minimize-2" : "maximize-2"} className="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </header>
+
+                    {/* MAIN APPLICATION CONTAINER */}
+                    <main className="flex-1 flex flex-col lg:flex-row relative">
+                        {/* TAB 1: SLIDES CONTAINER */}
+                        {activeTab === 'slides' && (
+                            <div className="flex-1 flex flex-col min-h-0 bg-[#FFFBF0] p-4 lg:p-6" {...swipeHandlers}>
+                                <div 
+                                    ref={slideContainerRef}
+                                    className="flex-1 bg-white border border-[#E8B53D]/40 rounded-2xl shadow-xl relative overflow-hidden flex flex-col justify-between p-6 sm:p-10 transition-all duration-300"
+                                >
+                                    {/* BACKGROUND GRID DECORATION (MUSTARD ACCENT LINES) */}
+                                    <div className="absolute inset-0 bg-[linear-gradient(to_right,#E8B53D_1px,transparent_1px),linear-gradient(to_bottom,#E8B53D_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-5 pointer-events-none"></div>
+
+                                    {/* Slide Header */}
+                                    <div className="relative z-10 flex items-center justify-between border-b border-slate-200 pb-4">
+                                        <div className="flex items-center gap-3">
+                                            <span className="text-[#6A1B1A] font-black text-xl tracking-wider">
+                                                SLIDE 0{SLIDES[currentSlide].id}
+                                            </span>
+                                            <div className="h-4 w-px bg-slate-300"></div>
+                                            <p className="text-xs font-semibold tracking-wider text-slate-500 uppercase">
+                                                {SLIDES[currentSlide].subtitle}
+                                            </p>
+                                        </div>
+                                        <div className="text-xs text-[#6A1B1A] bg-[#FFFBF0] px-2.5 py-1 rounded border border-[#E8B53D]/40 font-bold">
+                                            {currentSlide + 1} / {SLIDES.length}
+                                        </div>
+                                    </div>
+
+                                    {/* Slide Content Dynamic Router */}
+                                    <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 items-center py-6 relative z-10 min-h-0">
+                                        {/* Left Side: Standard Text Structure (5 Cols) */}
+                                        <div className="lg:col-span-5 flex flex-col justify-center space-y-4">
+                                            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight text-[#6A1B1A] leading-tight">
+                                                {SLIDES[currentSlide].title}
+                                            </h2>
+                                            <p className="text-sm sm:text-base text-slate-800 font-medium leading-relaxed bg-[#E8B53D]/10 border-l-4 border-[#E8B53D] p-3 rounded-r-lg shadow-sm">
+                                                {SLIDES[currentSlide].coreConcept}
+                                            </p>
+                                            <div className="space-y-2.5 pt-2 hidden sm:block">
+                                                <h4 className="text-xs font-bold uppercase tracking-wider text-[#6A1B1A] opacity-75">Takeaways:</h4>
+                                                {SLIDES[currentSlide].keyPoints.map((point, index) => (
+                                                    <div key={index} className="flex items-start gap-2.5 text-xs text-slate-600">
+                                                        <span className="mt-1 h-1.5 w-1.5 rounded-full bg-[#6A1B1A] flex-shrink-0" />
+                                                        <p className="leading-relaxed">{point.split(':')[1] ? <strong>{point.split(':')[0]}:</strong> : point}{point.split(':')[1]}</p>
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+
+                                        {/* Right Side: Immersive Interactive Widget (7 Cols) */}
+                                        <div className="lg:col-span-7 h-full min-h-[300px] flex items-center justify-center bg-[#FFFBF0]/60 rounded-xl border border-[#E8B53D]/30 p-4 relative overflow-hidden shadow-inner">
+                                            <SlideInteractiveWidget type={SLIDES[currentSlide].interactiveType} />
+                                        </div>
+                                    </div>
+
+                                    {/* Slide Footer Navigation */}
+                                    <div className="relative z-10 flex items-center justify-between border-t border-slate-200 pt-4 mt-auto">
+                                        <button 
+                                            onClick={prevSlide}
+                                            disabled={currentSlide === 0}
+                                            className={`px-4 py-2 rounded-lg text-xs font-bold border flex items-center gap-2 transition-all duration-150 ${currentSlide === 0 ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-[#6A1B1A]/30 hover:border-[#6A1B1A] text-[#6A1B1A] hover:bg-[#6A1B1A]/5'}`}
+                                        >
+                                            <i data-lucide="chevron-left" className="w-4 h-4"></i>
+                                            Previous
+                                        </button>
+
+                                        {/* Dynamic Bubble Indicators */}
+                                        <div className="flex gap-1.5">
+                                            {SLIDES.map((_, i) => (
+                                                <button
+                                                    key={i}
+                                                    onClick={() => setCurrentSlide(i)}
+                                                    className={`h-2 rounded-full transition-all duration-300 ${i === currentSlide ? 'w-6 bg-[#E8B53D]' : 'w-2 bg-slate-200 hover:bg-slate-300'}`}
+                                                    title={`Go to slide ${i + 1}`}
+                                                ></button>
+                                            ))}
+                                        </div>
+
+                                        <button 
+                                            onClick={nextSlide}
+                                            disabled={currentSlide === SLIDES.length - 1}
+                                            className={`px-4 py-2 rounded-lg text-xs font-bold border flex items-center gap-2 transition-all duration-150 ${currentSlide === SLIDES.length - 1 ? 'border-slate-200 text-slate-300 cursor-not-allowed' : 'border-[#6A1B1A]/30 hover:border-[#6A1B1A] text-[#6A1B1A] hover:bg-[#6A1B1A]/5'}`}
+                                        >
+                                            Next
+                                            <i data-lucide="chevron-right" className="w-4 h-4"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB 2: INTERACTIVE CLASS ACTIVITY HUB */}
+                        {activeTab === 'activities' && <ClassActivityPanel />}
+
+                        {/* TAB 3: MODERN BRAND CASE STUDIES */}
+                        {activeTab === 'brands' && <CaseStudiesPanel />}
+
+                        {/* TAB 4: YOUTUBE MEDIA CENTER */}
+                        {activeTab === 'resources' && <YouTubeResourcesPanel />}
+
+                        {/* PRESENTER NOTES PANEL (COLLAPSIBLE SIDEBAR) */}
+                        {showNotes && activeTab === 'slides' && (
+                            <aside className="w-full lg:w-[380px] bg-white border-t lg:border-t-0 lg:border-l border-[#E8B53D]/35 p-6 flex flex-col gap-5 overflow-y-auto shadow-lg">
+                                <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                                    <div className="flex items-center gap-2">
+                                        <i data-lucide="file-text" className="w-4 h-4 text-[#6A1B1A]"></i>
+                                        <h3 className="font-extrabold text-sm tracking-wide text-[#6A1B1A] uppercase">Presenter Console</h3>
+                                    </div>
+                                    <button 
+                                        onClick={() => setShowNotes(false)}
+                                        className="text-slate-400 hover:text-slate-600 p-1 hover:bg-slate-100 rounded"
+                                    >
+                                        <i data-lucide="x" className="w-4 h-4"></i>
+                                    </button>
+                                </div>
+
+                                <div className="space-y-4 text-sm">
+                                    <div className="bg-[#FFFBF0] p-3.5 rounded-lg border border-[#E8B53D]/40">
+                                        <h4 className="text-xs font-extrabold text-[#6A1B1A] uppercase tracking-wider mb-1">Slide Visual Directive</h4>
+                                        <p className="text-xs text-slate-700 leading-relaxed italic">
+                                            "{SLIDES[currentSlide].visualDirection}"
+                                        </p>
+                                    </div>
+
+                                    <div>
+                                        <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Key Lecture Cues</h4>
+                                        <ul className="space-y-3">
+                                            {SLIDES[currentSlide].keyPoints.map((point, index) => (
+                                                <li key={index} className="bg-slate-50 p-3 rounded border border-slate-150 flex items-start gap-2">
+                                                    <span className="font-mono text-xs text-[#6A1B1A] font-bold bg-[#6A1B1A]/10 h-5 w-5 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+                                                        {index + 1}
+                                                    </span>
+                                                    <p className="text-xs text-slate-700 leading-relaxed">
+                                                        {point}
+                                                    </p>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+
+                                    {/* Mustard Highlight Callout Box */}
+                                    <div className="bg-[#E8B53D]/10 p-4 rounded-xl border border-[#E8B53D] mt-6">
+                                        <h4 className="text-xs font-bold text-[#6A1B1A] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                                            <i data-lucide="sparkles" className="w-3.5 h-3.5"></i>
+                                            Professor's Secret Weapon
+                                        </h4>
+                                        <p className="text-xs text-slate-700 leading-relaxed font-medium">
+                                            When presenting Slide {currentSlide + 1}, prompt students to look at the interactive widget to the right. Use the interactive features to model the 2026 data architecture and omnichannel synchronization.
+                                        </p>
+                                    </div>
+                                </div>
+                            </aside>
+                        )}
+                    </main>
+
+                    {/* BRANDED FOOTER LINE */}
+                    <footer className="border-t border-[#E8B53D]/30 bg-[#6A1B1A] text-white/90 px-4 py-3 text-center text-xs flex justify-between items-center flex-wrap gap-2">
+                        <p className="font-medium">© 2026 Integrated Marketing Communications Curriculum. Final Year Marketing Capstone.</p>
+                        <p className="font-bold tracking-wide flex items-center gap-1.5">
+                            <span>Crafted with ❤️ by Dinesh Sir | Learn with Dinesh Sir</span>
+                        </p>
+                    </footer>
+                </div>
+            );
+        }
+
+        // --- INTERACTIVE SLIDE WIDGET CONTAINER ROUTER ---
+        function SlideInteractiveWidget({ type }) {
+            useEffect(() => {
+                lucide.createIcons();
+            }, [type]);
+
+            switch (type) {
+                case 'attention-meter':
+                    return <AttentionMeterWidget />;
+                case 'comparison-table':
+                    return <ComparisonTableWidget />;
+                case 'four-cs':
+                    return <FourCsQuadrantWidget />;
+                case 'peso-model':
+                    return <PesoModelWidget />;
+                case 'sync-timeline':
+                    return <SyncTimelineWidget />;
+                case 'privacy-slider':
+                    return <PrivacySliderWidget />;
+                case 'metric-dashboard':
+                    return <MetricDashboardWidget />;
+                default:
+                    return (
+                        <div className="text-[#6A1B1A] text-xs flex flex-col items-center gap-2">
+                            <i data-lucide="help-circle" className="w-8 h-8 text-slate-400"></i>
+                            Interactive asset loading...
+                        </div>
+                    );
+            }
+        }
+
+        // --- INDIVIDUAL INTERACTIVE WIDGET COMPONENTS ---
+
+        // 1. Attention Meter (Slide 1)
+        function AttentionMeterWidget() {
+            const [deficit, setDeficit] = useState(85);
+            const [timerCount, setTimerCount] = useState(8.0);
+            const [isCounting, setIsCounting] = useState(false);
+
+            useEffect(() => {
+                let interval;
+                if (isCounting && timerCount > 0) {
+                    interval = setInterval(() => {
+                        setTimerCount((prev) => {
+                            const next = parseFloat((prev - 0.1).toFixed(1));
+                            if (next <= 0) {
+                                setIsCounting(false);
+                                return 0;
+                            }
+                            return next;
+                        });
+                        setDeficit(prev => Math.min(100, prev + 1));
+                    }, 100);
+                }
+                return () => clearInterval(interval);
+            }, [isCounting, timerCount]);
+
+            const triggerScan = () => {
+                setTimerCount(8.0);
+                setDeficit(30);
+                setIsCounting(true);
+            };
+
+            return (
+                <div className="w-full h-full flex flex-col justify-between p-4">
+                    <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                        <span className="text-xs font-bold tracking-wider uppercase text-slate-500 flex items-center gap-1">
+                            <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+                            Live Filter Simulator
+                        </span>
+                        <span className="text-xs text-[#6A1B1A] font-bold font-mono">Attention Span: {timerCount}s</span>
+                    </div>
+
+                    <div className="flex-1 flex flex-col items-center justify-center gap-6 py-4">
+                        {/* Core Gauge */}
+                        <div className="relative w-44 h-44 rounded-full border-4 border-[#E8B53D]/30 flex items-center justify-center flex-col shadow-inner bg-white">
+                            <div className="absolute inset-0 bg-radial-gradient(circle, rgba(106,27,26,0.05)_0%, transparent_70%)"></div>
+                            {/* Inner Ring Glow */}
+                            <div className={`absolute w-36 h-36 rounded-full border-2 transition-all duration-300 ${deficit > 80 ? 'border-rose-500/30' : 'border-[#6A1B1A]/20'}`}></div>
+                            
+                            <span className={`text-4xl font-extrabold tracking-tight ${deficit > 80 ? 'text-rose-500' : 'text-[#6A1B1A]'}`}>
+                                {deficit}%
+                            </span>
+                            <span className="text-[10px] text-slate-500 uppercase tracking-widest mt-1 font-bold">
+                                Filter Density
+                            </span>
+                        </div>
+
+                        {/* Interactive trigger */}
+                        <div className="w-full max-w-sm space-y-3 text-center">
+                            <button 
+                                onClick={triggerScan}
+                                className="w-full bg-gradient-to-r from-[#6A1B1A] to-[#802423] hover:from-[#521413] text-white font-bold text-xs py-2.5 px-4 rounded-lg shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                            >
+                                <i data-lucide="zap" className="w-4 h-4 text-[#E8B53D]"></i>
+                                Simulate User Landing on Content
+                            </button>
+                            <p className="text-[10px] text-slate-500 font-medium">
+                                {timerCount > 0 && isCounting 
+                                    ? "Evaluating user interface... Attention depletion active."
+                                    : "Attention exhausted. Core filter active: Ad content ignored."}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // 2. Comparison Table Switcher (Slide 2)
+        function ComparisonTableWidget() {
+            const [selectedRow, setSelectedRow] = useState(null);
+
+            const comparisonData = [
+                {
+                    attr: "Strategy Focus",
+                    multi: "Channel-centric. Each channel works independently to optimize its own clicks and hits.",
+                    omni: "Customer-centric. Every interaction supports a cohesive path through the purchasing funnel."
+                },
+                {
+                    attr: "Data Flow",
+                    multi: "Siloed data storage. Email newsletters have zero connectivity to recent in-store or social triggers.",
+                    omni: "Unified. Real-time Customer Data Platforms (CDP) synchronize all points of visibility instantly."
+                },
+                {
+                    attr: "User Experience",
+                    multi: "Repetitive & segmented. Customers receive uncoordinated ad variations, inducing fatigue.",
+                    omni: "Continuous & contextual. The campaign message naturally shifts as the customer moves forward."
+                },
+                {
+                    attr: "Measurement",
+                    multi: "Attribution strictly restricted to the last touchpoint. Flawed analytics reporting.",
+                    omni: "Multi-touch, complex incrementality modeling mapping every single contribution path."
+                }
+            ];
+
+            return (
+                <div className="w-full h-full flex flex-col justify-between p-4">
+                    <div className="border-b border-slate-200 pb-2 mb-4">
+                        <span className="text-xs font-extrabold text-[#6A1B1A] uppercase tracking-wider">
+                            Interactive Contrast Matrix
+                        </span>
+                        <p className="text-[10px] text-slate-500 mt-0.5">Click any row below to dissect the key transition barriers.</p>
+                    </div>
+
+                    <div className="flex-1 space-y-2 overflow-y-auto">
+                        {comparisonData.map((item, idx) => (
+                            <div 
+                                key={idx}
+                                onClick={() => setSelectedRow(selectedRow === idx ? null : idx)}
+                                className={`border rounded-lg transition-all duration-200 cursor-pointer ${selectedRow === idx ? 'bg-[#FFFBF0] border-[#E8B53D] shadow-md' : 'bg-white border-slate-200 hover:border-[#E8B53D]/50'}`}
+                            >
+                                <div className="p-3 flex items-center justify-between">
+                                    <span className="text-xs font-bold text-[#6A1B1A]">{item.attr}</span>
+                                    <span className="text-[10px] text-[#6A1B1A] font-bold font-mono flex items-center gap-1">
+                                        {selectedRow === idx ? "Collapse" : "Expand Matrix"}
+                                        <i data-lucide={selectedRow === idx ? "chevron-up" : "chevron-down"} className="w-3.5 h-3.5"></i>
+                                    </span>
+                                </div>
+
+                                {selectedRow === idx && (
+                                    <div className="px-3 pb-3 grid grid-cols-2 gap-4 pt-1 border-t border-slate-200 text-[11px] animate-fadeIn">
+                                        <div className="bg-rose-500/5 p-2 rounded border border-rose-500/15">
+                                            <span className="text-[9px] font-bold text-rose-600 uppercase tracking-wider block mb-1">Traditional Multichannel</span>
+                                            <p className="text-slate-700 leading-relaxed">{item.multi}</p>
+                                        </div>
+                                        <div className="bg-[#E8B53D]/10 p-2 rounded border border-[#E8B53D]/30">
+                                            <span className="text-[9px] font-bold text-[#6A1B1A] uppercase tracking-wider block mb-1">2026 Omnichannel</span>
+                                            <p className="text-slate-700 leading-relaxed">{item.omni}</p>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // 3. 4 C's Quadrant Explorer (Slide 3)
+        function FourCsQuadrantWidget() {
+            const [activeQuadrant, setActiveQuadrant] = useState('none');
+
+            const quadrants = {
+                consistency: {
+                    title: "Consistency",
+                    desc: "The anchor of trust. The core brand statement, aesthetics, and basic value structures remain unchanged across all touchpoints.",
+                    example: "CeraVe maintaining clinical aesthetic from NY Times print reviews to comedic creator videos."
+                },
+                clarity: {
+                    title: "Clarity",
+                    desc: "Simplifying complex choices. Cutting through endless platform noise with one unmistakable proposition that anyone understands in 1 second.",
+                    example: "Liquid Death's direct core promise: 'Murder Your Thirst' packaged beautifully in an aluminum can."
+                },
+                connection: {
+                    title: "Connection",
+                    desc: "Adapting content style to platform patterns. Using vertical fast-cut loops for TikTok but rich editorial prose for deep email newsletters.",
+                    example: "A creator explaining chemical science in simple terms rather than complex dry text on a poster."
+                },
+                continuity: {
+                    title: "Continuity",
+                    desc: "Seamless journey choreography. Designing intentional digital connections that pass contextual details smoothly from step to step.",
+                    example: "A customer cart following them seamlessly from an Instagram story directly to a real-world checkout."
+                }
+            };
+
+            return (
+                <div className="w-full h-full flex flex-col justify-between p-4">
+                    <div className="border-b border-slate-200 pb-2 mb-2">
+                        <span className="text-xs font-extrabold text-[#6A1B1A] uppercase tracking-wider">
+                            Interactive Quadrant Interface
+                        </span>
+                    </div>
+
+                    <div className="flex-1 grid grid-cols-2 gap-3 py-2">
+                        {Object.keys(quadrants).map((key) => {
+                            const q = quadrants[key];
+                            const isActive = activeQuadrant === key;
+                            return (
+                                <button
+                                    key={key}
+                                    onClick={() => setActiveQuadrant(isActive ? 'none' : key)}
+                                    className={`relative rounded-xl border p-3 flex flex-col justify-between text-left transition-all duration-300 ${isActive ? 'bg-[#FFFBF0] border-[#6A1B1A] shadow-lg ring-1 ring-[#6A1B1A]' : 'bg-white border-slate-200 hover:border-[#E8B53D]'}`}
+                                >
+                                    <div className="flex items-center justify-between w-full">
+                                        <h3 className="text-xs font-extrabold text-[#6A1B1A] uppercase tracking-wider">{q.title}</h3>
+                                        <span className={`h-2.5 w-2.5 rounded-full ${isActive ? 'bg-[#E8B53D] animate-pulse' : 'bg-slate-300'}`}></span>
+                                    </div>
+                                    <p className="text-[10px] text-slate-600 mt-2 line-clamp-3">
+                                        {isActive ? q.desc : "Click to unpack definition and 2026 execution parameters."}
+                                    </p>
+                                    {isActive && (
+                                        <div className="mt-2 text-[9px] text-[#6A1B1A] font-bold uppercase bg-[#6A1B1A]/5 border-l-2 border-[#6A1B1A] pl-1">
+                                            Focus: {q.example}
+                                        </div>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            );
+        }
+
+        // 4. PESO Venn Diagram (Slide 4)
+        function PesoModelWidget() {
+            const [selectedSector, setSelectedSector] = useState('integrated');
+
+            const sectorDetails = {
+                paid: {
+                    title: "Paid Media",
+                    subtitle: "Fast Amplification",
+                    desc: "Hyper-targeted digital real-estate. Includes social platform amplification, Retail Media Networks, programmatic Digital Out-Of-Home, and high-visibility influencer agreements.",
+                    metrics: "CPM, CAC, ROAS, Incrementality"
+                },
+                earned: {
+                    title: "Earned Media",
+                    subtitle: "Authentic Credibility",
+                    desc: "The result of organic cultural conversation. Third-party press coverage, organic community interest, micro-influencer reviews, and high-trust organic content lift.",
+                    metrics: "Earned Media Value (EMV), Brand Mentions"
+                },
+                shared: {
+                    title: "Shared Media",
+                    subtitle: "Co-Created Community",
+                    desc: "Co-creation spaces and social connection structures. Platforms like Discord channels, Reddit hubs, dynamic TikTok challenges, and direct community co-creation campaigns.",
+                    metrics: "Engagement Rate, UGC Volume, Virality Index"
+                },
+                owned: {
+                    title: "Owned Media",
+                    subtitle: "The Brand Sanctuary",
+                    desc: "Fully controlled data assets where direct connections reside. Comprises first-party contact lists, SMS channels, brand-specific applications, and interactive web tools.",
+                    metrics: "Subscriber Growth, Email Open/CTR, App LTV"
+                },
+                integrated: {
+                    title: "Integrated Ecosystem",
+                    subtitle: "The 2026 Brand Sweet Spot",
+                    desc: "All four core media categories running simultaneously in a continuous, self-reinforcing wheel. Data and creative flow dynamically between points of contact to maximize lifetime brand return.",
+                    metrics: "Customer Lifetime Value (LTV), Unified Attribution"
+                }
+            };
+
+            const details = sectorDetails[selectedSector];
+
+            return (
+                <div className="w-full h-full flex flex-col justify-between p-4">
+                    <div className="border-b border-slate-200 pb-2">
+                        <span className="text-xs font-extrabold text-[#6A1B1A] uppercase tracking-wider">
+                            Interactive PESO Wheel
+                        </span>
+                        <p className="text-[9px] text-slate-500">Click any component to investigate key attributes.</p>
+                    </div>
+
+                    <div className="flex-1 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                        {/* Interactive Vector Mockup of Venn */}
+                        <div className="md:col-span-5 flex justify-center py-2">
+                            <div className="relative w-36 h-36 flex items-center justify-center">
+                                {/* Paid Circle */}
+                                <div 
+                                    onClick={() => setSelectedSector('paid')}
+                                    className={`absolute w-20 h-20 rounded-full border flex items-center justify-center cursor-pointer transition-all duration-300 -translate-y-6 ${selectedSector === 'paid' ? 'bg-[#E8B53D]/25 border-[#E8B53D] scale-105 z-10' : 'bg-white border-slate-200'}`}
+                                >
+                                    <span className="text-[10px] font-bold text-[#6A1B1A]">Paid</span>
+                                </div>
+                                {/* Earned Circle */}
+                                <div 
+                                    onClick={() => setSelectedSector('earned')}
+                                    className={`absolute w-20 h-20 rounded-full border flex items-center justify-center cursor-pointer transition-all duration-300 translate-x-6 ${selectedSector === 'earned' ? 'bg-[#6A1B1A]/20 border-[#6A1B1A] scale-105 z-10' : 'bg-white border-slate-200'}`}
+                                >
+                                    <span className="text-[10px] font-bold text-[#6A1B1A]">Earned</span>
+                                </div>
+                                {/* Shared Circle */}
+                                <div 
+                                    onClick={() => setSelectedSector('shared')}
+                                    className={`absolute w-20 h-20 rounded-full border flex items-center justify-center cursor-pointer transition-all duration-300 translate-y-6 ${selectedSector === 'shared' ? 'bg-rose-500/10 border-rose-400 scale-105 z-10' : 'bg-white border-slate-200'}`}
+                                >
+                                    <span className="text-[10px] font-bold text-[#6A1B1A]">Shared</span>
+                                </div>
+                                {/* Owned Circle */}
+                                <div 
+                                    onClick={() => setSelectedSector('owned')}
+                                    className={`absolute w-20 h-20 rounded-full border flex items-center justify-center cursor-pointer transition-all duration-300 -translate-x-6 ${selectedSector === 'owned' ? 'bg-emerald-500/10 border-emerald-500 scale-105 z-10' : 'bg-white border-slate-200'}`}
+                                >
+                                    <span className="text-[10px] font-bold text-[#6A1B1A]">Owned</span>
+                                </div>
+                                {/* Hub Center Trigger */}
+                                <div 
+                                    onClick={() => setSelectedSector('integrated')}
+                                    className={`absolute w-12 h-12 rounded-full border bg-[#6A1B1A] flex items-center justify-center cursor-pointer transition-all duration-300 z-20 ${selectedSector === 'integrated' ? 'border-[#E8B53D] scale-110 shadow-lg' : 'border-[#E8B53D]'}`}
+                                    title="View Integrated Core"
+                                >
+                                    <i data-lucide="sparkles" className={`w-4 h-4 ${selectedSector === 'integrated' ? 'text-[#E8B53D] animate-spin' : 'text-slate-300'}`}></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Display Information Panel */}
+                        <div className="md:col-span-7 bg-white p-3 rounded-lg border border-[#E8B53D]/30 flex flex-col justify-between h-36 shadow-sm">
+                            <div>
+                                <div className="flex items-center justify-between">
+                                    <h4 className="text-xs font-bold text-[#6A1B1A] uppercase">{details.title}</h4>
+                                    <span className="text-[8px] font-bold px-1.5 py-0.5 rounded bg-[#FFFBF0] text-[#6A1B1A] border border-[#E8B53D]/40">
+                                        {details.subtitle}
+                                    </span>
+                                </div>
+                                <p className="text-[10px] text-slate-600 leading-relaxed mt-1.5 line-clamp-3">
+                                    {details.desc}
+                                </p>
+                            </div>
+                            <div className="border-t border-slate-100 pt-1.5 flex items-center justify-between text-[9px] text-slate-500 mt-2">
+                                <span>Core KPIs:</span>
+                                <span className="font-mono text-[#6A1B1A] font-bold">{details.metrics}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // 5. Customer Journey Timeline (Slide 5)
+        function SyncTimelineWidget() {
+            const [step, setStep] = useState(0);
+
+            const steps = [
+                {
+                    title: "1. Scroll Interrupt",
+                    sub: "The Native Hook (TikTok)",
+                    desc: "An organic-style, lo-fi short video features an unscripted product setup. Attention is captured within 3 seconds.",
+                    kpi: "View Duration & Share Rate"
+                },
+                {
+                    title: "2. The Trust Quiz",
+                    sub: "The Conversion Bridge (Web/App)",
+                    desc: "Click-through redirects to a fast, clean zero-party data quiz. Users input skin-type profiles for personal recommendations.",
+                    kpi: "Quiz Completion & Opt-In Rate"
+                },
+                {
+                    title: "3. Smart Follow-Up",
+                    sub: "The Relationship Nurture (Email)",
+                    desc: "System sends an immediate personalized email containing specific ingredient guidelines and a unique barcode.",
+                    kpi: "Email Open & Barcode Saves"
+                },
+                {
+                    title: "4. Tactile Store Event",
+                    sub: "The Physical Anchor (Pop-Up)",
+                    desc: "The barcode is scanned at a local downtown pop-up truck to receive custom samples and record physical store attendance.",
+                    kpi: "Real-World Traffic & Conversions"
+                }
+            ];
+
+            return (
+                <div className="w-full h-full flex flex-col justify-between p-4">
+                    <div className="border-b border-slate-200 pb-2 mb-2">
+                        <span className="text-xs font-extrabold text-[#6A1B1A] uppercase tracking-wider">
+                            Interactive Multi-Touch Journey Flow
+                        </span>
+                    </div>
+
+                    <div className="flex-1 flex flex-col justify-between gap-3">
+                        {/* Interactive Horizontal Track */}
+                        <div className="flex items-center justify-between relative mt-2 px-6">
+                            <div className="absolute left-6 right-6 h-0.5 bg-slate-200 top-1/2 -translate-y-1/2 z-0"></div>
+                            {steps.map((item, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => setStep(idx)}
+                                    className={`relative z-10 w-8 h-8 rounded-full border-2 flex items-center justify-center transition-all duration-300 font-mono text-xs ${idx === step ? 'bg-[#E8B53D] border-[#E8B53D] text-[#6A1B1A] font-extrabold scale-110 shadow-md' : 'bg-white border-slate-300 text-slate-500 hover:border-[#E8B53D]'}`}
+                                >
+                                    {idx + 1}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Slide Display Panel */}
+                        <div className="bg-white p-4 rounded-xl border border-[#E8B53D]/30 flex-1 flex flex-col justify-between shadow-md">
+                            <div>
+                                <span className="text-[9px] font-bold text-[#6A1B1A] uppercase tracking-widest block">
+                                    {steps[step].sub}
+                                </span>
+                                <h4 className="text-xs font-extrabold text-slate-800 mt-0.5">{steps[step].title}</h4>
+                                <p className="text-[10px] text-slate-600 leading-relaxed mt-2">
+                                    {steps[step].desc}
+                                </p>
+                            </div>
+                            <div className="border-t border-slate-100 pt-2 flex items-center justify-between text-[9px] text-slate-500 mt-2">
+                                <span>Key Metric:</span>
+                                <span className="font-mono text-[#6A1B1A] font-bold">{steps[step].kpi}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // 6. Privacy Slider (Slide 6)
+        function PrivacySliderWidget() {
+            const [value, setValue] = useState(50);
+
+            // Calculate current profile
+            const getProfile = (val) => {
+                if (val < 25) {
+                    return {
+                        label: "Blind Broadcast",
+                        sub: "The Generic Approach",
+                        desc: "Zero personalization. Customers receive identical static ads. High friction, low conversion, completely compliant but visually boring.",
+                        status: "Safe but Wasteful",
+                        color: "text-emerald-800 bg-emerald-500/5 border-emerald-500/20"
+                    };
+                } else if (val < 75) {
+                    return {
+                        label: "Value-Driven Context",
+                        sub: "Consent-First Personalized Customization",
+                        desc: "Leverages explicitly declared first-party quiz insights. Messages reflect chosen skin configurations or specified functional interests.",
+                        status: "The Sweet Spot",
+                        color: "text-[#6A1B1A] bg-[#E8B53D]/10 border-[#E8B53D]/40"
+                    };
+                } else {
+                    return {
+                        label: "Invasive Tracking",
+                        sub: "Creepy Boundary Overstep",
+                        desc: "Utilizes non-consensual geofencing to trigger active sales push notifications. 'We noticed you stood next to our shelf for 30 seconds!' Raises major red flags.",
+                        status: "Risk of Brand Damage",
+                        color: "text-rose-800 bg-rose-500/5 border-rose-500/25"
+                    };
+                }
+            };
+
+            const profile = getProfile(value);
+
+            return (
+                <div className="w-full h-full flex flex-col justify-between p-4">
+                    <div className="border-b border-slate-200 pb-2 mb-2">
+                        <span className="text-xs font-extrabold text-[#6A1B1A] uppercase tracking-wider">
+                            Interactive Personalization Dial
+                        </span>
+                        <p className="text-[10px] text-slate-500 mt-0.5">Drag the slider to investigate customer boundary shifts.</p>
+                    </div>
+
+                    <div className="flex-1 flex flex-col justify-between gap-4 py-2">
+                        {/* HTML Range Slider */}
+                        <div className="space-y-2">
+                            <input 
+                                type="range" 
+                                min="0" 
+                                max="100" 
+                                value={value} 
+                                onChange={(e) => setValue(parseInt(e.target.value))}
+                                className="w-full h-1.5 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-[#6A1B1A]"
+                            />
+                            <div className="flex justify-between text-[9px] text-slate-500 px-1 font-mono">
+                                <span>0% (Silo Generic)</span>
+                                <span>50% (Contextual)</span>
+                                <span>100% (Hyper Creepy)</span>
+                            </div>
+                        </div>
+
+                        {/* Slider State Card */}
+                        <div className={`p-4 rounded-xl border flex-1 flex flex-col justify-between transition-all duration-300 ${profile.color}`}>
+                            <div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-[8px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-white border border-slate-250 text-slate-700">
+                                        Status: {profile.status}
+                                    </span>
+                                    <span className="text-xs font-mono font-bold">{value}%</span>
+                                </div>
+                                <h4 className="text-xs font-extrabold text-slate-850 mt-2">{profile.label}</h4>
+                                <span className="text-[10px] text-slate-600 block">{profile.sub}</span>
+                                <p className="text-[10px] text-slate-700 leading-relaxed mt-2 line-clamp-3">
+                                    {profile.desc}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // 7. Metric Dashboard (Slide 7)
+        function MetricDashboardWidget() {
+            const [selectedClass, setSelectedClass] = useState('actionable');
+
+            const metrics = {
+                vanity: [
+                    { name: "Impressions", value: "4.2M", desc: "Tells you a file loaded on a screen. Zero link to engagement." },
+                    { name: "Clicks", value: "112K", desc: "Tells you a thumb tapped a link. High error rate, no buyer validation." },
+                    { name: "Silo CTR", value: "2.1%", desc: "Only measures channel response. Fails to check overall path progress." }
+                ],
+                actionable: [
+                    { name: "Incrementality Lift", value: "+24%", desc: "Proves channel A directly drove conversion lifts across channel B." },
+                    { name: "Omnichannel LTV", value: "$182.50", desc: "Calculates unified purchase value over the customer lifespan." },
+                    { name: "Zero-Party Opt-in", value: "42%", desc: "Direct customer opt-ins, preserving cookie-free scalability." }
+                ]
+            };
+
+            return (
+                <div className="w-full h-full flex flex-col justify-between p-4">
+                    <div className="border-b border-slate-200 pb-2 mb-2 flex items-center justify-between">
+                        <span className="text-xs font-extrabold text-[#6A1B1A] uppercase tracking-wider">
+                            Interactive Measurement Console
+                        </span>
+                        <div className="flex gap-1 text-[9px] bg-slate-100 p-0.5 rounded border border-slate-200">
+                            <button 
+                                onClick={() => setSelectedClass('vanity')}
+                                className={`px-2 py-0.5 rounded transition-all ${selectedClass === 'vanity' ? 'bg-rose-500/10 text-rose-700 font-bold border border-rose-500/20' : 'text-slate-500 hover:text-slate-800'}`}
+                            >
+                                Vanity
+                            </button>
+                            <button 
+                                onClick={() => setSelectedClass('actionable')}
+                                className={`px-2 py-0.5 rounded transition-all ${selectedClass === 'actionable' ? 'bg-[#E8B53D]/20 text-[#6A1B1A] font-bold border border-[#E8B53D]' : 'text-slate-500 hover:text-slate-800'}`}
+                            >
+                                Unified
+                            </button>
+                        </div>
+                    </div>
+
+                    <div className="flex-1 grid grid-cols-1 gap-2.5 py-1">
+                        {metrics[selectedClass].map((metric, idx) => (
+                            <div 
+                                key={idx}
+                                className={`p-2.5 rounded-lg border bg-white flex items-center gap-4 transition-all duration-300 shadow-sm ${selectedClass === 'vanity' ? 'border-rose-500/10 hover:border-rose-500/25' : 'border-[#E8B53D]/10 hover:border-[#E8B53D]/25'}`}
+                            >
+                                <div className="text-center min-w-[70px]">
+                                    <span className={`text-base font-extrabold block font-mono ${selectedClass === 'vanity' ? 'text-rose-600' : 'text-[#6A1B1A]'}`}>
+                                        {metric.value}
+                                    </span>
+                                    <span className="text-[8px] text-slate-400 uppercase tracking-wider">Metric Value</span>
+                                </div>
+                                <div className="h-8 w-px bg-slate-200"></div>
+                                <div className="flex-1">
+                                    <h5 className="text-[10px] font-bold text-slate-800">{metric.name}</h5>
+                                    <p className="text-[9px] text-slate-500 leading-normal mt-0.5">{metric.desc}</p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            );
+        }
+
+        // --- EXTRA PANEL 2: GAME HUB (CLASSROOM ACTIVITIES) ---
+        function ClassActivityPanel() {
+            const [selectedProduct, setSelectedProduct] = useState(TRADITIONAL_PRODUCTS[0]);
+            const [timerTime, setTimerTime] = useState(420); // 7 mins in secs
+            const [timerActive, setTimerActive] = useState(false);
+            const [teams, setTeams] = useState([
+                { name: "Agency Alpha", product: "Dental Floss", score: 0 },
+                { name: "Agency Beta", product: "Standard Pencil", score: 0 }
+            ]);
+            const [newTeamName, setNewTeamName] = useState("");
+
+            // Timer management
+            useEffect(() => {
+                let interval;
+                if (timerActive && timerTime > 0) {
+                    interval = setInterval(() => {
+                        setTimerTime(t => t - 1);
+                    }, 1000);
+                } else if (timerTime === 0) {
+                    setTimerActive(false);
+                }
+                return () => clearInterval(interval);
+            }, [timerActive, timerTime]);
+
+            const rollProduct = () => {
+                const randomProduct = TRADITIONAL_PRODUCTS[Math.floor(Math.random() * TRADITIONAL_PRODUCTS.length)];
+                setSelectedProduct(randomProduct);
+            };
+
+            const toggleTimer = () => setTimerActive(!timerActive);
+            const resetTimer = () => {
+                setTimerActive(false);
+                setTimerTime(420);
+            };
+
+            const formatTime = (seconds) => {
+                const m = Math.floor(seconds / 60);
+                const s = seconds % 60;
+                return `${m}:${s < 10 ? '0' : ''}${s}`;
+            };
+
+            const addNewTeam = (e) => {
+                e.preventDefault();
+                if (!newTeamName.trim()) return;
+                setTeams([...teams, { name: newTeamName, product: selectedProduct, score: 0 }]);
+                setNewTeamName("");
+            };
+
+            const incrementScore = (idx) => {
+                const copy = [...teams];
+                copy[idx].score += 1;
+                setTeams(copy);
+            };
+
+            const decrementScore = (idx) => {
+                const copy = [...teams];
+                if (copy[idx].score > 0) {
+                    copy[idx].score -= 1;
+                    setTeams(copy);
+                }
+            };
+
+            return (
+                <div className="flex-1 flex flex-col xl:flex-row gap-6 p-4 lg:p-6 overflow-y-auto">
+                    {/* Left Column: Activity Layout & Rules */}
+                    <div className="flex-1 bg-white border border-[#E8B53D]/30 rounded-2xl p-6 flex flex-col justify-between shadow-md">
+                        <div>
+                            <div className="flex items-center gap-2 mb-4">
+                                <span className="bg-[#6A1B1A]/10 text-[#6A1B1A] text-xs font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border border-[#6A1B1A]/20">
+                                    Classroom Challenge
+                                </span>
+                                <h2 className="text-xl font-extrabold text-[#6A1B1A]">The 8-Second Attention Hijack</h2>
+                            </div>
+
+                            <p className="text-sm text-slate-700 leading-relaxed mb-4">
+                                Divide your class into integrated marketing agencies. Each agency is assigned a boring, everyday commoditized object. They have exactly <strong className="text-[#6A1B1A]">7 minutes</strong> to outline an integrated launch strategy.
+                            </p>
+
+                            {/* Rules stepper */}
+                            <div className="space-y-3 mb-6">
+                                <div className="flex gap-3 items-start text-xs bg-[#FFFBF0] p-3 rounded-xl border border-[#E8B53D]/40">
+                                    <span className="bg-[#E8B53D]/25 text-[#6A1B1A] font-bold font-mono h-6 w-6 rounded flex items-center justify-center flex-shrink-0">1</span>
+                                    <div>
+                                        <h4 className="font-extrabold text-[#6A1B1A] mb-0.5">The Native Hook (Paid/Shared)</h4>
+                                        <p className="text-slate-600 font-medium">Design a 5-second scroll-stopping TikTok video idea specifically tailored to hook a modern attention span.</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-3 items-start text-xs bg-[#FFFBF0] p-3 rounded-xl border border-[#E8B53D]/40">
+                                    <span className="bg-[#E8B53D]/25 text-[#6A1B1A] font-bold font-mono h-6 w-6 rounded flex items-center justify-center flex-shrink-0">2</span>
+                                    <div>
+                                        <h4 className="font-extrabold text-[#6A1B1A] mb-0.5">The Quiz Bridge (Owned)</h4>
+                                        <p className="text-slate-600 font-medium">Develop a custom landing page or zero-party quiz concept to capture consumer data cleanly without cookies.</p>
+                                    </div>
+                                </div>
+                                <div className="flex gap-3 items-start text-xs bg-[#FFFBF0] p-3 rounded-xl border border-[#E8B53D]/40">
+                                    <span className="bg-[#E8B53D]/25 text-[#6A1B1A] font-bold font-mono h-6 w-6 rounded flex items-center justify-center flex-shrink-0">3</span>
+                                    <div>
+                                        <h4 className="font-extrabold text-[#6A1B1A] mb-0.5">The Physical Anchor (Experiential)</h4>
+                                        <p className="text-slate-600 font-medium">Sketch a downtown guerrilla pop-up concept matching the product theme to convert digital engagement into real-world traffic.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Interactive Product Randomizer (Mustard Highlight Callout Box) */}
+                        <div className="bg-[#E8B53D]/10 p-4 rounded-xl border border-[#E8B53D] mt-auto">
+                            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Campaign Product Assigner</span>
+                            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+                                <div>
+                                    <h4 className="text-xs text-slate-500 font-semibold">Active Product To Target:</h4>
+                                    <span className="text-lg font-extrabold text-[#6A1B1A] bg-gradient-to-r from-[#6A1B1A] to-[#802423] text-transparent bg-clip-text">
+                                        {selectedProduct}
+                                    </span>
+                                </div>
+                                <button 
+                                    onClick={rollProduct}
+                                    className="bg-white border border-[#E8B53D] hover:bg-slate-50 text-[#6A1B1A] text-xs font-bold px-4 py-2.5 rounded-lg flex items-center justify-center gap-1.5 transition-all"
+                                >
+                                    <i data-lucide="refresh-cw" className="w-3.5 h-3.5"></i>
+                                    Roll Random Product
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Right Column: Timer & Presentation Scorekeeping */}
+                    <div className="w-full xl:w-[400px] flex flex-col gap-6">
+                        {/* Countdown card */}
+                        <div className="bg-white border border-[#E8B53D]/30 rounded-2xl p-6 flex flex-col items-center justify-center text-center shadow-md">
+                            <span className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Agency Workshop Timer</span>
+                            <div className="text-5xl font-mono font-black text-[#6A1B1A] tracking-wider mb-4 drop-shadow-[0_0_8px_rgba(106,27,26,0.15)]">
+                                {formatTime(timerTime)}
+                            </div>
+                            <div className="flex gap-2">
+                                <button 
+                                    onClick={toggleTimer}
+                                    className={`px-4 py-2 rounded-lg text-xs font-extrabold flex items-center gap-1.5 transition-all ${timerActive ? 'bg-amber-500/15 border border-amber-500/30 text-amber-600 hover:bg-amber-500/25' : 'bg-[#E8B53D] hover:bg-[#d4a22e] text-[#6A1B1A] shadow'}`}
+                                >
+                                    <i data-lucide={timerActive ? "pause" : "play"} className="w-4 h-4"></i>
+                                    {timerActive ? "Pause Workshop" : "Start 7-Min Timer"}
+                                </button>
+                                <button 
+                                    onClick={resetTimer}
+                                    className="px-3 py-2 bg-white hover:bg-slate-100 border border-slate-300 text-slate-550 rounded-lg text-xs font-semibold transition-all"
+                                >
+                                    Reset
+                                </button>
+                            </div>
+                        </div>
+
+                        {/* Agency Scoring System */}
+                        <div className="bg-white border border-[#E8B53D]/30 rounded-2xl p-6 flex-1 flex flex-col justify-between shadow-md">
+                            <div>
+                                <div className="border-b border-slate-200 pb-3 mb-4">
+                                    <h3 className="font-extrabold text-sm text-[#6A1B1A] uppercase tracking-wider">Agency Evaluation Portal</h3>
+                                    <p className="text-[10px] text-slate-500 mt-0.5">Pitch: 60 Seconds per group. Track votes here.</p>
+                                </div>
+
+                                <div className="space-y-2 max-h-[220px] overflow-y-auto mb-4 pr-1">
+                                    {teams.map((team, idx) => (
+                                        <div key={idx} className="bg-[#FFFBF0] p-3 rounded-lg border border-[#E8B53D]/30 flex items-center justify-between gap-4">
+                                            <div className="min-w-0">
+                                                <h4 className="text-xs font-bold text-slate-800 truncate">{team.name}</h4>
+                                                <span className="text-[9px] text-slate-500 font-semibold">Target: {team.product}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <button 
+                                                    onClick={() => decrementScore(idx)}
+                                                    className="w-6 h-6 rounded bg-white border border-slate-300 hover:border-[#E8B53D] text-slate-600 hover:text-[#6A1B1A] flex items-center justify-center text-sm"
+                                                >
+                                                    -
+                                                </button>
+                                                <span className="font-mono text-xs font-bold text-[#6A1B1A] min-w-[20px] text-center">
+                                                    {team.score}
+                                                </span>
+                                                <button 
+                                                    onClick={() => incrementScore(idx)}
+                                                    className="w-6 h-6 rounded bg-white border border-slate-300 hover:border-[#E8B53D] text-slate-600 hover:text-[#6A1B1A] flex items-center justify-center text-sm"
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Add team sub-form */}
+                            <form onSubmit={addNewTeam} className="flex gap-2">
+                                <input 
+                                    type="text" 
+                                    placeholder="Enter Agency Name..." 
+                                    value={newTeamName}
+                                    onChange={(e) => setNewTeamName(e.target.value)}
+                                    className="flex-1 bg-[#FFFBF0] border border-[#E8B53D]/30 rounded-lg px-3 py-2 text-xs text-slate-800 focus:outline-none focus:border-[#E8B53D]"
+                                />
+                                <button 
+                                    type="submit"
+                                    className="bg-[#6A1B1A] hover:bg-[#521413] text-white text-xs px-3 py-2 rounded-lg font-bold flex items-center gap-1 transition-all"
+                                >
+                                    <i data-lucide="plus" className="w-3.5 h-3.5 text-[#E8B53D]"></i>
+                                    Add Agency
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- EXTRA PANEL 3: CASE STUDIES PORTAL ---
+        function CaseStudiesPanel() {
+            const [selectedBrand, setSelectedBrand] = useState(0);
+
+            return (
+                <div className="flex-1 flex flex-col lg:flex-row gap-6 p-4 lg:p-6 overflow-y-auto">
+                    {/* Brand List Panel */}
+                    <div className="w-full lg:w-[320px] bg-white border border-[#E8B53D]/35 rounded-2xl p-4 flex flex-col gap-3 shadow-md">
+                        <div className="border-b border-slate-200 pb-2 mb-2">
+                            <h3 className="font-extrabold text-sm text-[#6A1B1A] uppercase tracking-wider">Real-World Case Modules</h3>
+                            <p className="text-[10px] text-slate-500 mt-0.5">Toggle campaigns to explore strategic implementations.</p>
+                        </div>
+
+                        {BRAND_EXAMPLES.map((brand, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => setSelectedBrand(idx)}
+                                className={`w-full text-left p-3.5 rounded-xl border transition-all duration-200 flex flex-col gap-1.5 ${selectedBrand === idx ? 'bg-[#FFFBF0] border-[#E8B53D] shadow-sm' : 'bg-slate-50 border-slate-200 hover:border-[#E8B53D]/50'}`}
+                            >
+                                <div className="flex items-center justify-between w-full">
+                                    <span className="text-xs font-black text-slate-800">{brand.name}</span>
+                                    <i data-lucide="chevron-right" className="w-4 h-4 text-slate-400"></i>
+                                </div>
+                                <span className="text-[10px] text-[#6A1B1A] font-bold leading-tight">{brand.tagline}</span>
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Active Brand Details Deck */}
+                    <div className="flex-1 bg-white border border-[#E8B53D]/35 rounded-2xl p-6 flex flex-col justify-between shadow-md">
+                        <div>
+                            <div className="flex items-center justify-between border-b border-slate-200 pb-3 mb-4">
+                                <div>
+                                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Active Case Target</span>
+                                    <h2 className="text-xl font-extrabold text-[#6A1B1A] mt-0.5">
+                                        {BRAND_EXAMPLES[selectedBrand].name}
+                                    </h2>
+                                </div>
+                                <span className="text-[9px] font-bold text-[#6A1B1A] bg-[#FFFBF0] border border-[#E8B53D]/40 px-2.5 py-1 rounded">
+                                    {BRAND_EXAMPLES[selectedBrand].tagline}
+                                </span>
+                            </div>
+
+                            <p className="text-sm text-slate-750 leading-relaxed mb-6 bg-[#FFFBF0] p-4 rounded-xl border border-[#E8B53D]/30 italic font-medium">
+                                "{BRAND_EXAMPLES[selectedBrand].summary}"
+                            </p>
+
+                            <div className="space-y-4">
+                                <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider">Execution Breakdown:</h3>
+                                {BRAND_EXAMPLES[selectedBrand].details.map((detail, index) => (
+                                    <div key={index} className="flex gap-3.5 items-start bg-slate-50 p-3 rounded-lg border border-[#E8B53D]/10">
+                                        <div className="bg-[#E8B53D]/10 text-[#6A1B1A] font-bold text-xs h-5 w-5 rounded flex items-center justify-center flex-shrink-0 mt-0.5">
+                                            {index + 1}
+                                        </div>
+                                        <div>
+                                            <h4 className="text-xs font-extrabold text-slate-800 mb-1">{detail.split(':')[0]}</h4>
+                                            <p className="text-xs text-slate-650 leading-relaxed">{detail.split(':')[1] || detail}</p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Interactive Discussion Prompt Box (Mustard Accent Callout) */}
+                        <div className="mt-8 bg-[#E8B53D]/10 p-4 rounded-xl border border-[#E8B53D] flex items-start gap-3">
+                            <div className="p-2 bg-[#6A1B1A]/10 rounded text-[#6A1B1A] flex-shrink-0">
+                                <i data-lucide="help-circle" className="w-5 h-5 text-[#6A1B1A]"></i>
+                            </div>
+                            <div>
+                                <h4 className="text-xs font-extrabold text-[#6A1B1A] mb-1">Class Discussion Prompt:</h4>
+                                <p className="text-xs text-slate-700 leading-relaxed font-semibold">
+                                    {selectedBrand === 0 
+                                        ? "How did the CeraVe campaign manage the critical balance of using chaotic internet comedy while still maintaining their dermatologist-backed medical authority?"
+                                        : "How did Liquid Death package a basic commodity so uniquely that the packaging itself became an ongoing physical advertisement, reducing direct media acquisition spend?"}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- EXTRA PANEL 4: YOUTUBE MEDIA CENTER ---
+        function YouTubeResourcesPanel() {
+            const [copiedIndex, setCopiedIndex] = useState(null);
+
+            const searchPrompts = [
+                {
+                    topic: "CeraVe Michael Cera Breakdown",
+                    query: "CeraVe Michael Cera Super Bowl campaign case study",
+                    usage: "Demonstrates high-production humor unified with a complex digital creator launch sequence.",
+                    metric: "Earned Media Focus"
+                },
+                {
+                    topic: "Liquid Death Strategic Analysis",
+                    query: "Liquid Death marketing strategy breakdown how they built a billion dollar brand",
+                    usage: "Illustrates disruptive brand building using packaging innovations and social campaigns with low TV spend.",
+                    metric: "Shared & Owned Media Focus"
+                },
+                {
+                    topic: "Advertising Evolution Timeline",
+                    query: "The evolution of advertising from Mad Men to digital programmatic",
+                    usage: "Visualizes the structural transition from legacy, broadcast silos to programmatic data integration.",
+                    metric: "Silo vs. Ecosystem Context"
+                },
+                {
+                    topic: "Nike Experiential Design Integration",
+                    query: "Nike House of Innovation experiential retail design and digital integration",
+                    usage: "Examines how physical locations act as direct conversion extensions for unified customer data profiles.",
+                    metric: "Physical Omnichannel Anchoring"
+                },
+                {
+                    topic: "Customer Data Platforms Explained",
+                    query: "What is a Customer Data Platform CDP and why does marketing need it",
+                    usage: "Explains structural database consolidation and why cookies are fading from modern campaigns.",
+                    metric: "Marketing Automation Foundations"
+                }
+            ];
+
+            const handleCopy = (query, idx) => {
+                // Clipboard API fallback helper
+                const tempInput = document.createElement("input");
+                tempInput.value = query;
+                document.body.appendChild(tempInput);
+                tempInput.select();
+                document.execCommand("copy");
+                document.body.removeChild(tempInput);
+                
+                setCopiedIndex(idx);
+                setTimeout(() => setCopiedIndex(null), 2000);
+            };
+
+            return (
+                <div className="flex-1 bg-[#FFFBF0] p-4 lg:p-6 flex flex-col overflow-y-auto">
+                    <div className="max-w-4xl mx-auto w-full bg-white border border-[#E8B53D]/30 rounded-2xl p-6 flex flex-col shadow-md">
+                        <div className="border-b border-slate-200 pb-3 mb-6">
+                            <h2 className="text-xl font-extrabold text-[#6A1B1A] flex items-center gap-2">
+                                <i data-lucide="youtube" className="text-red-600 w-6 h-6"></i>
+                                Integrated Lecture Video Hub
+                            </h2>
+                            <p className="text-xs text-slate-500 mt-1 font-semibold">
+                                Simply click any button below to copy the exact search query. Paste it directly into YouTube to locate matching campaigns or expert analyses.
+                            </p>
+                        </div>
+
+                        <div className="space-y-4">
+                            {searchPrompts.map((prompt, idx) => (
+                                <div 
+                                    key={idx}
+                                    className="bg-slate-50 p-4 rounded-xl border border-[#E8B53D]/10 hover:border-[#E8B53D]/30 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm"
+                                >
+                                    <div className="space-y-1.5 min-w-0 flex-1">
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs font-black text-slate-800">{prompt.topic}</span>
+                                            <span className="text-[8px] font-bold text-[#6A1B1A] bg-[#FFFBF0] px-1.5 py-0.5 rounded border border-[#E8B53D]/40 uppercase">
+                                                {prompt.metric}
+                                            </span>
+                                        </div>
+                                        <p className="text-xs text-slate-600 leading-relaxed">
+                                            <strong className="text-slate-700">Classroom Context:</strong> {prompt.usage}
+                                        </p>
+                                        <div className="font-mono text-[10px] text-[#6A1B1A] font-bold bg-[#E8B53D]/15 py-1 px-2 rounded border border-[#E8B53D]/25 inline-block truncate max-w-full">
+                                            Query: "{prompt.query}"
+                                        </div>
+                                    </div>
+
+                                    <button 
+                                        onClick={() => handleCopy(prompt.query, idx)}
+                                        className={`px-4 py-2.5 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all w-full md:w-auto flex-shrink-0 ${copiedIndex === idx ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-600' : 'bg-[#6A1B1A] hover:bg-[#521413] text-white'}`}
+                                    >
+                                        <i data-lucide={copiedIndex === idx ? "check" : "copy"} className="w-3.5 h-3.5 text-[#E8B53D]"></i>
+                                        {copiedIndex === idx ? "Query Copied!" : "Copy Search Query"}
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // --- BOOTSTRAP REACT APP ---
+        const container = document.getElementById('root');
+        const root = ReactDOM.createRoot(container);
+        root.render(<App />);
+
+        // Global initialization call for Lucide icons
+        setTimeout(() => {
+            if (typeof lucide !== 'undefined') {
+                lucide.createIcons();
+            }
+        }, 500);
+    </script>
+</body>
+</html>
